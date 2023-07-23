@@ -40,3 +40,16 @@ now
 ## The idea behind the example
 
 This example shows the most basic idea behind Next. We have 2 pages: `pages/index.js` and `pages/about.js`. The former responds to `/` requests and the latter to `/about`. Using `next/link` you can add hyperlinks between them with universal routing capabilities. The `day` directory shows that you can have subdirectories.
+
+## 작업 순서
+
+1. 로그인 페이지
+   1-1. 로그인 페이지 ( Token 발급 )
+2. 가입 페이지
+3. 메인 페이지
+   3-1. 메인페이지 접근시 session 내용이 없을 경우 로그인 페이지로
+   3-2. 데이터 호출
+4. 데이터 작성 페이지(?) 아니면 입력하면 바로 보여줄수 있게끔
+   4-1. 데이터 입력 및 저장
+5. 좋아요 기능
+6. 상세페이지 ( 모달로 할까? )

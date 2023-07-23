@@ -1,37 +1,92 @@
-import React from "react";
+import { NextPage } from "next";
+import useUser from "../lib/useUser";
+import { Post } from "@prisma/client";
+import useSWR, { mutate, useSWRConfig } from "swr";
+import Input from "../components/input";
+import { useForm } from "react-hook-form";
+import useMutation from "../lib/useMutation";
+import Item from "../components/item";
+import { useEffect } from "react";
 
-export default () => (
-  <div className="w-[100vw] h-[100vh] bg-slate-700 flex justify-center items-center">
-    <div className="bg-black rounded-2xl p-20 w-1/3 flex justify-center items-center flex-col text-white">
-      <div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          height="1em"
-          viewBox="0 0 384 512"
-        >
-          <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
-        </svg>
-        <svg
-          className="fill-white"
-          xmlns="http://www.w3.org/2000/svg"
-          height="1em"
-          viewBox="0 0 512 512"
-        >
-          <path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z" />
-        </svg>
-        <div></div>
-      </div>
-      <h1>로그인 하기</h1>
-      <form className="w-full">
-        <input
-          className="bg-black border-[1px] rounded border-slate-400 h-16 w-full p-2"
-          placeholder="휴대폰 번호, 이메일 주소를 입력해주세요."
+interface PostForm {
+  content?: string;
+}
+interface PostWithCount extends Post {
+  _count: {
+    favs: number;
+  };
+}
+
+interface PostsResponse {
+  ok: boolean;
+  tweets: PostWithCount[];
+}
+
+interface UploadPostForm {
+  content?: string;
+}
+
+interface UploadPostMuation {
+  ok: boolean;
+  post: Post;
+}
+
+const Index: NextPage = () => {
+  const { user, isLoading } = useUser();
+  const { data } = useSWR<PostsResponse>("/api/tweet");
+
+  const [uploadPost, { loading }] =
+    useMutation<UploadPostMuation>("/api/tweet");
+
+  const { register, handleSubmit, reset } = useForm<PostForm>();
+
+  const onValid = (data: UploadPostForm) => {
+    if (loading) return;
+    uploadPost(data);
+    reset();
+  };
+
+  useEffect(() => {
+    mutate("/api/tweet");
+  }, [loading]);
+
+  console.log("메인페이지");
+  console.log(data);
+
+  return (
+    <div className="w-full h-[100vh] overflow-y-auto bg-slate-600 p-5">
+      <h1 className="text-white font-bold">Home</h1>
+      {/* 입력 */}
+      <form onSubmit={handleSubmit(onValid)}>
+        <Input
+          register={register("content", {
+            required: true,
+          })}
+          name="content"
           type="text"
+          placeholder="What is happening?"
+          required
         />
-        <button className="bg-white w-full rounded-full text-black font-bold">
-          다음
+        <button className="px-4 py-2 rounded-full bg-blue-400 text-white font-bold">
+          Tweet
         </button>
       </form>
+      {/* 리스트 페이지 */}
+      <div>
+        <div>
+          {data?.tweets?.map((tweet) => (
+            <Item
+              id={tweet.id}
+              key={tweet.id}
+              name={tweet.name}
+              content={tweet.content}
+              hearts={tweet._count.favs}
+            />
+          ))}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+export default Index;
