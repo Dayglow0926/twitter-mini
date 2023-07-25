@@ -19,6 +19,8 @@ async function handler(
     },
   });
 
+  console.log(foundInfo);
+
   if (!foundInfo) return res.status(404).end();
 
   req.session.user = {
